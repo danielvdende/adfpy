@@ -1,0 +1,6 @@
+*.ipynb
+.idea
+*.DS_Store
+*.pyc
+*.egg-info
+.python-version
