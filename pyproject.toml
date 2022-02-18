@@ -1,0 +1,24 @@
+[tool.poetry]
+name = "better_adf"
+version = "0.1.0"
+description = "A Pythonic wrapper for Azure Data Factory"
+authors = ["Daniel van der Ende <daniel.vanderende@gmail.com>"]
+license = "Apache"
+
+[tool.poetry.dependencies]
+python = "^3.8"
+azure-mgmt-resource = "^20.1.0"
+azure-mgmt-datafactory = "^2.2.1"
+
+azure-identity = {version = "^1.7.1", optional = true}
+
+[tool.poetry.extras]
+deploy = ["azure-identity"]
+
+[tool.poetry.dev-dependencies]
+pytest = "^7.0.1"
+flake8 = "^4.0.1"
+
+[build-system]
+requires = ["poetry-core>=1.0.0"]
+build-backend = "poetry.core.masonry.api"
