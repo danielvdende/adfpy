@@ -48,7 +48,7 @@ class AdfIfConditionActivity(AdfActivity):
             if_true_activities=[activity.to_adf() for activity in self.if_true_activities],
             if_false_activities=[activity.to_adf() for activity in self.if_false_activities],
             depends_on=[
-                ActivityDependency(activity=dep_name, dependency_conditions=dep-dep_conditions)
+                ActivityDependency(activity=dep_name, dependency_conditions=dep_conditions)
                 for dep_name, dep_conditions in self.depends_on.items()
             ],
         )
