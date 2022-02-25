@@ -11,8 +11,8 @@ from better_adf.activity import AdfActivity
 
 
 class AdfCopyActivity(AdfActivity):
-    def __init__(self, name, input_dataset_name, output_dataset_name, source_type, sink_type):
-        super(AdfCopyActivity, self).__init__(name)
+    def __init__(self, name, input_dataset_name, output_dataset_name, source_type, sink_type, pipeline=None):
+        super(AdfCopyActivity, self).__init__(name, pipeline)
         self.input_dataset = DatasetReference(reference_name=input_dataset_name)
         self.output_dataset = DatasetReference(reference_name=output_dataset_name)
         self.source_type = source_type
@@ -31,8 +31,8 @@ class AdfCopyActivity(AdfActivity):
 
 
 class AdfDeleteActivity(AdfActivity):
-    def __init__(self, name: str, dataset_name: str, recursive: bool = False, wildcard: str = None):
-        super(AdfDeleteActivity, self).__init__(name)
+    def __init__(self, name: str, dataset_name: str, recursive: bool = False, wildcard: str = None, pipeline=None):
+        super(AdfDeleteActivity, self).__init__(name, pipeline)
         # TODO: this is an arbitrary subselection of options. We should bring this in line with what the SDK exposes.
         # this can be achieved in several ways (e.g. getting all parameters in here, using a dict, re-using the ADF SDK
         # objects, etc.)
@@ -55,8 +55,8 @@ class AdfDeleteActivity(AdfActivity):
 
 
 class AdfDatabricksSparkPythonActivity(AdfActivity):
-    def __init__(self, name, python_file):
-        super(AdfDatabricksSparkPythonActivity, self).__init__(name)
+    def __init__(self, name, python_file, pipeline=None):
+        super(AdfDatabricksSparkPythonActivity, self).__init__(name, pipeline)
         self.python_file = python_file
 
     def to_adf(self):

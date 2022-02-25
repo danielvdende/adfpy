@@ -10,11 +10,12 @@ from azure.mgmt.datafactory.models import (
 )
 
 from better_adf.activity import AdfActivity
+from better_adf.pipeline import AdfPipeline
 
 
 class AdfExecutePipelineActivity(AdfActivity):
-    def __init__(self, name: str, pipeline_name: str):
-        super(AdfExecutePipelineActivity, self).__init__(name)
+    def __init__(self, name: str, pipeline_name: str, pipeline=None):
+        super(AdfExecutePipelineActivity, self).__init__(name, pipeline)
         self.pipeline_name = pipeline_name
 
     def to_adf(self):
@@ -35,8 +36,9 @@ class AdfIfConditionActivity(AdfActivity):
         expression: str,
         if_false_activities: List[AdfActivity],
         if_true_activities: List[AdfActivity],
+        pipeline=None
     ):
-        super(AdfIfConditionActivity, self).__init__(name)
+        super(AdfIfConditionActivity, self).__init__(name, pipeline)
         self.expression = expression
         self.if_false_activities = if_false_activities
         self.if_true_activities = if_true_activities
@@ -55,8 +57,8 @@ class AdfIfConditionActivity(AdfActivity):
 
 
 class AdfForEachActivity(AdfActivity):
-    def __init__(self, name, items: str, activities: List[AdfActivity]):
-        super(AdfForEachActivity, self).__init__(name)
+    def __init__(self, name, items: str, activities: List[AdfActivity], pipeline: AdfPipeline = None):
+        super(AdfForEachActivity, self).__init__(name, pipeline)
         self.items = items  # TODO: this now has to be an ADF expression. Probably want to revisit this
         self.activities = activities
 

@@ -27,7 +27,7 @@ existing_pipelines = [
 # 2. Retrieve all pipeline objects from path
 mod_spec = importlib.util.spec_from_file_location(
     "main",
-    "/Users/danielvanderende/code/opensource/better_adf/examples/complex_extraction_ingestion_flow/main.py",
+    "/Users/daniel/code/opensource/better_adf/examples/complex_extraction_ingestion_flow/main.py",
 )
 module = importlib.util.module_from_spec(mod_spec)
 mod_spec.loader.exec_module(module)
