@@ -7,6 +7,7 @@ from azure.mgmt.datafactory.models import (
     IfConditionActivity,
     Expression,
     ForEachActivity,
+    SetVariableActivity
 )
 
 from better_adf.activity import AdfActivity
@@ -71,4 +72,20 @@ class AdfForEachActivity(AdfActivity):
                 ActivityDependency(activity=dep_name, dependency_conditions=dep_conditions)
                 for dep_name, dep_conditions in self.depends_on.items()
             ],
+        )
+
+
+class AdfSetVariableActivity(AdfActivity):
+    def __init__(self, name, value, pipeline: AdfPipeline = None):
+        super(AdfSetVariableActivity, self).__init__(name, pipeline)
+        self.value = value
+
+    def to_adf(self):
+        return SetVariableActivity(
+            name=self.name,
+            value=self.value,
+            depends_on=[
+                ActivityDependency(activity=dep_name, dependency_conditions=dep_conditions)
+                for dep_name, dep_conditions in self.depends_on.items()
+            ]
         )

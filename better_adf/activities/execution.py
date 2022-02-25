@@ -1,10 +1,13 @@
 from azure.mgmt.datafactory.models import (
     DatasetReference,
+    LinkedServiceReference,
     CopyActivity,
     ActivityDependency,
     DeleteActivity,
     AzureBlobStorageReadSettings,
     DatabricksSparkPythonActivity,
+    LookupActivity,
+    SqlServerStoredProcedureActivity
 )
 
 from better_adf.activity import AdfActivity
@@ -67,4 +70,34 @@ class AdfDatabricksSparkPythonActivity(AdfActivity):
                 ActivityDependency(activity=dep_name, dependency_conditions=dep_conditions)
                 for dep_name, dep_conditions in self.depends_on.items()
             ],
+        )
+
+
+class AdfLookupActivity(AdfActivity):
+    def __init__(self, name: str, dataset: str, source, pipeline=None):
+        super(AdfLookupActivity, self).__init__(name, pipeline)
+        self.dataset = DatasetReference(reference_name=dataset)
+        self.source = source
+
+    def to_adf(self):
+        return LookupActivity(name=self.name,
+                              dataset=self.dataset,
+                              source=self.source,
+                              depends_on=[
+                                  ActivityDependency(activity=dep_name, dependency_conditions=dep_conditions)
+                                  for dep_name, dep_conditions in self.depends_on.items()
+                              ])
+
+
+class AdfSqlServerStoredProcedureActivity(AdfActivity):
+    def __init__(self, name: str, stored_procedure_name: str, linked_service: str, pipeline=None):
+        super(AdfSqlServerStoredProcedureActivity, self).__init__(name, pipeline)
+        self.stored_procedure_name = stored_procedure_name
+        self.linked_service = LinkedServiceReference(reference_name=linked_service)
+
+    def to_adf(self):
+        return SqlServerStoredProcedureActivity(
+            name=self.name,
+            stored_procedure_name=self.stored_procedure_name,
+            linked_service_name=self.linked_service
         )

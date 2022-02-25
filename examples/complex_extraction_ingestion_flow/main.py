@@ -1,3 +1,4 @@
+# TODO: we should abstract this away, it's not nice to have to deal with these models
 from azure.mgmt.datafactory.models import BlobSource, BlobSink
 
 from better_adf.activities.control import (
@@ -11,9 +12,12 @@ from better_adf.activities.execution import (
     AdfDatabricksSparkPythonActivity,
 )
 from better_adf.pipeline import AdfPipeline
+from examples.complex_extraction_ingestion_flow.no_watermark_pipeline import no_watermark_pipeline
+from examples.complex_extraction_ingestion_flow.watermark_pipeline import watermark_pipeline
 
-pipeline = AdfPipeline(
-    name="complex_extraction_ingestion_flow"
+parent_pipeline = AdfPipeline(
+    name="complex_extraction_ingestion_flow",
+    depends_on_pipelines={watermark_pipeline, no_watermark_pipeline}
 )
 
 fetch = AdfForEachActivity(
@@ -23,11 +27,11 @@ fetch = AdfForEachActivity(
         AdfIfConditionActivity(
             name="if_foo",
             expression="",
-            if_false_activities=[AdfExecutePipelineActivity(name="run_copyPipeline", pipeline_name="copyPipeline")],
-            if_true_activities=[AdfExecutePipelineActivity(name="run_copyPipeline", pipeline_name="copyPipeline")],
+            if_false_activities=[AdfExecutePipelineActivity(name="run_no_watermark", pipeline_name="complex_extraction_ingestion_flow_no_watermark")],
+            if_true_activities=[AdfExecutePipelineActivity(name="run_watermark", pipeline_name="complex_extraction_ingestion_flow_watermark")],
         )
     ],
-    pipeline=pipeline
+    pipeline=parent_pipeline
 )
 
 temp_to_landing = AdfCopyActivity(
@@ -36,7 +40,7 @@ temp_to_landing = AdfCopyActivity(
     output_dataset_name="landing",
     source_type=BlobSource,
     sink_type=BlobSink,
-    pipeline=pipeline
+    pipeline=parent_pipeline
 )
 
 temp_to_archive = AdfCopyActivity(
@@ -45,22 +49,22 @@ temp_to_archive = AdfCopyActivity(
     output_dataset_name="staging",
     source_type=BlobSource,
     sink_type=BlobSink,
-    pipeline=pipeline
+    pipeline=parent_pipeline
 )
 
-ingest = AdfDatabricksSparkPythonActivity(name="ingest", python_file="foo.py", pipeline=pipeline)
+ingest = AdfDatabricksSparkPythonActivity(name="ingest", python_file="foo.py", pipeline=parent_pipeline)
 
 delete_temp_files = AdfDeleteActivity(name="delete_temp_files",
                                       dataset_name="staging",
                                       recursive=True,
                                       wildcard="foo_temp*",
-                                      pipeline=pipeline)
+                                      pipeline=parent_pipeline)
 
 delete_landing_files = AdfDeleteActivity(name="delete_landing_files",
                                          dataset_name="landing",
                                          recursive=True,
                                          wildcard="foo_landing*",
-                                         pipeline=pipeline)
+                                         pipeline=parent_pipeline)
 
 
 fetch >> [temp_to_archive, temp_to_landing] >> ingest >> delete_landing_files
@@ -68,10 +72,3 @@ delete_temp_files.add_dependencies({
     temp_to_landing.name: ["Succeeded", "Skipped"],
     temp_to_archive.name: ["Succeeded", "Skipped"]
 })
-
-
-# lookup
-
-# set variable
-
-# stored procedure
