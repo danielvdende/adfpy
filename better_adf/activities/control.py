@@ -1,12 +1,12 @@
 from typing import List
 
 from azure.mgmt.datafactory.models import (
-    ExecutePipelineActivity,
-    PipelineReference,
     ActivityDependency,
-    IfConditionActivity,
+    ExecutePipelineActivity,
     Expression,
     ForEachActivity,
+    IfConditionActivity,
+    PipelineReference,
     SetVariableActivity
 )
 

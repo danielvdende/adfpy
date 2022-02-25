@@ -1,5 +1,7 @@
 import importlib.util
 import os
+from pathlib import Path
+from typing import List
 
 from azure.identity import ClientSecretCredential
 from azure.mgmt.datafactory import DataFactoryManagementClient
@@ -18,6 +20,7 @@ credentials = ClientSecretCredential(
 resource_client = ResourceManagementClient(credentials, subscription_id)
 adf_client = DataFactoryManagementClient(credentials, subscription_id)
 
+adf_pipelines_path = Path("/Users/daniel/code/opensource/better_adf/examples/")
 
 # 1. fetch existing pipelines from ADF
 existing_pipelines = [
@@ -26,7 +29,6 @@ existing_pipelines = [
 
 # 2. Retrieve all pipeline objects from path (which can be a dir)
 def load_pipelines_from_file(file_path):
-    # TODO: this needs to be extended to more than 1 file :D
     mod_spec = importlib.util.spec_from_file_location(
         "main_foo",
         file_path,
@@ -36,16 +38,22 @@ def load_pipelines_from_file(file_path):
     return [var for var in vars(module).values() if isinstance(var, AdfPipeline)]
 
 
-# TODO: this leads to some duplicated calls, as "resolved" dependencies won't be removed from the queue of pipelines to create.
-# This will also cause interesting problems if you include the separate file with the referenced child pipeline, as that
-# will cause duplicates. Probably need to override the __eq__ dunder of the adfpipeline class and use sets instead of lists.
-pipelines = []
-pipelines += load_pipelines_from_file("/Users/daniel/code/opensource/better_adf/examples/complex_extraction_ingestion_flow/main.py")
-pipelines += load_pipelines_from_file("/Users/daniel/code/opensource/better_adf/examples/simple_copy_pipeline/main.py")
-print([x.name for x in pipelines])
+def load_pipelines_from_path(path: Path, pipelines: List[AdfPipeline] = None) -> List[AdfPipeline]:
+    if not pipelines:
+        pipelines = []
+    child_elements = path.glob("**/*.py")
+    for el in child_elements:
+        if el.is_dir():
+            load_pipelines_from_path(el, pipelines)
+        else:
+            pipelines += load_pipelines_from_file(el)
+    return pipelines
+
+pipelines = load_pipelines_from_path(adf_pipelines_path)
 
 
 def create_pipeline(p: AdfPipeline):
+    # TODO: hackaround with required pipelines. Might want to revisit this
     for required_pipeline in p.depends_on_pipelines:
         if required_pipeline.name not in pipelines_names:
             create_pipeline(required_pipeline)
@@ -66,7 +74,6 @@ existing_pipelines = [
     x.name for x in adf_client.pipelines.list_by_factory(resource_group_name=rg_name, factory_name=df_name)
 ]
 
-# TODO: what happens if you remove a pipeline that another pipeline uses? Anser: it crashes! :D
 for p in existing_pipelines:
     if p not in pipelines_names:
         print(f"Pipeline {p} no longer exists. Deleting from ADF")

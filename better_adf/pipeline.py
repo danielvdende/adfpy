@@ -6,7 +6,7 @@ from better_adf.activity import AdfActivity
 
 
 class AdfPipeline:
-    def __init__(self, name, activities: List[AdfActivity] = None, depends_on_pipelines = {}):
+    def __init__(self, name, activities: List[AdfActivity] = None, depends_on_pipelines={}):
         self.name = name
         self.activities = activities
         if not activities:
