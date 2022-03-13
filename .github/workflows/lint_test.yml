@@ -1,5 +1,9 @@
-name: Python Linting
-on: [push]
+name: Linting and Testing
+on:
+  push:
+    branches:
+      - '**'
+      - '!releases/**'
 jobs:
   lint:
     runs-on: ubuntu-latest
