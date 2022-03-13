@@ -16,3 +16,13 @@ class AdfPipeline:
 
     def to_adf(self):
         return PipelineResource(activities=[act.to_adf() for act in self.activities])
+
+    def __eq__(self, other):
+        # This is debatable
+        return self.name == other.name
+
+    def __hash__(self):
+        return hash((self.name))
+
+    def __repr__(self):
+        return f"<AdfPipeline: {self.name}>"
