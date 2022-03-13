@@ -4,7 +4,7 @@ from typing import List, Union, Dict
 
 class AdfActivity:
     # TODO: figure out if there's a better way here. We make the type hint a string to avoid a circular import
-    def __init__(self, name, pipeline: "AdfPipeline" = None):
+    def __init__(self, name, pipeline: "AdfPipeline" = None):  # noqa: F821
         self.name = name
         self.depends_on = dict()
         if pipeline:

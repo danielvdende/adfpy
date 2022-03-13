@@ -10,16 +10,16 @@ no_watermark_pipeline = AdfPipeline(
 )
 
 set_no_watermark_query = AdfSetVariableActivity(
-    name="noWatermarkQuery",
-    value="select * from source",
-    pipeline=no_watermark_pipeline
+    name="noWatermarkQuery", value="select * from source", pipeline=no_watermark_pipeline
 )
 
-table_to_temp = AdfCopyActivity(name="copyTableToTemp",
-                                input_dataset_name="landing",
-                                output_dataset_name="staging",
-                                source_type=BlobSource,
-                                sink_type=BlobSink,
-                                pipeline=no_watermark_pipeline)
+table_to_temp = AdfCopyActivity(
+    name="copyTableToTemp",
+    input_dataset_name="landing",
+    output_dataset_name="staging",
+    source_type=BlobSource,
+    sink_type=BlobSink,
+    pipeline=no_watermark_pipeline,
+)
 
 set_no_watermark_query >> table_to_temp

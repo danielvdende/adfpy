@@ -7,7 +7,7 @@ from azure.mgmt.datafactory.models import (
     DeleteActivity,
     LinkedServiceReference,
     LookupActivity,
-    SqlServerStoredProcedureActivity
+    SqlServerStoredProcedureActivity,
 )
 
 from better_adf.activity import AdfActivity
@@ -22,19 +22,23 @@ class AdfCopyActivity(AdfActivity):
         self.sink_type = sink_type
 
     def to_adf(self):
-        return CopyActivity(name=self.name,
-                            inputs=[self.input_dataset],
-                            outputs=[self.output_dataset],
-                            source=self.source_type,
-                            sink=self.sink_type,
-                            depends_on=[
-                                ActivityDependency(activity=dep_name, dependency_conditions=dep_conditions)
-                                for dep_name, dep_conditions in self.depends_on.items()
-                            ])
+        return CopyActivity(
+            name=self.name,
+            inputs=[self.input_dataset],
+            outputs=[self.output_dataset],
+            source=self.source_type,
+            sink=self.sink_type,
+            depends_on=[
+                ActivityDependency(activity=dep_name, dependency_conditions=dep_conditions)
+                for dep_name, dep_conditions in self.depends_on.items()
+            ],
+        )
 
 
 class AdfDeleteActivity(AdfActivity):
-    def __init__(self, name: str, dataset_name: str, recursive: bool = False, wildcard: str = None, pipeline=None):
+    def __init__(
+        self, name: str, dataset_name: str, recursive: bool = False, wildcard: str = None, pipeline=None
+    ):
         super(AdfDeleteActivity, self).__init__(name, pipeline)
         # TODO: this is an arbitrary subselection of options. We should bring this in line with what the SDK exposes.
         # this can be achieved in several ways (e.g. getting all parameters in here, using a dict, re-using the ADF SDK
@@ -80,13 +84,15 @@ class AdfLookupActivity(AdfActivity):
         self.source = source
 
     def to_adf(self):
-        return LookupActivity(name=self.name,
-                              dataset=self.dataset,
-                              source=self.source,
-                              depends_on=[
-                                  ActivityDependency(activity=dep_name, dependency_conditions=dep_conditions)
-                                  for dep_name, dep_conditions in self.depends_on.items()
-                              ])
+        return LookupActivity(
+            name=self.name,
+            dataset=self.dataset,
+            source=self.source,
+            depends_on=[
+                ActivityDependency(activity=dep_name, dependency_conditions=dep_conditions)
+                for dep_name, dep_conditions in self.depends_on.items()
+            ],
+        )
 
 
 class AdfSqlServerStoredProcedureActivity(AdfActivity):
@@ -99,5 +105,5 @@ class AdfSqlServerStoredProcedureActivity(AdfActivity):
         return SqlServerStoredProcedureActivity(
             name=self.name,
             stored_procedure_name=self.stored_procedure_name,
-            linked_service_name=self.linked_service
+            linked_service_name=self.linked_service,
         )

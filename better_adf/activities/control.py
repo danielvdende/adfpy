@@ -24,9 +24,7 @@ class AdfExecutePipelineActivity(AdfActivity):
             name=self.name,
             pipeline=PipelineReference(reference_name=self.pipeline_name),
             depends_on=[
-                ActivityDependency(
-                    activity=dep_name, dependency_conditions=dep_conditions
-                )
+                ActivityDependency(activity=dep_name, dependency_conditions=dep_conditions)
                 for dep_name, dep_conditions in self.depends_on.items()
             ],
         )
@@ -50,16 +48,10 @@ class AdfIfConditionActivity(AdfActivity):
         return IfConditionActivity(
             name=self.name,
             expression=Expression(value=self.expression),
-            if_true_activities=[
-                activity.to_adf() for activity in self.if_true_activities
-            ],
-            if_false_activities=[
-                activity.to_adf() for activity in self.if_false_activities
-            ],
+            if_true_activities=[activity.to_adf() for activity in self.if_true_activities],
+            if_false_activities=[activity.to_adf() for activity in self.if_false_activities],
             depends_on=[
-                ActivityDependency(
-                    activity=dep_name, dependency_conditions=dep_conditions
-                )
+                ActivityDependency(activity=dep_name, dependency_conditions=dep_conditions)
                 for dep_name, dep_conditions in self.depends_on.items()
             ],
         )
@@ -76,19 +68,18 @@ class AdfForEachActivity(AdfActivity):
         super(AdfForEachActivity, self).__init__(name, pipeline)
         self.items = items  # TODO: this now has to be an ADF expression. Probably want to revisit this
         self.activities = activities
-        # TODO: This is a workaround that means activities within a foreachactivity may only have a single linear line of dependency
+        # TODO: This is a workaround that means activities within a foreachactivity may only have a single linear line
+        #  of dependency
         for i in range(1, len(self.activities)):
             self.activities[i].add_dependency(self.activities[i - 1].name)
 
     def to_adf(self):
-         return ForEachActivity(
+        return ForEachActivity(
             name=self.name,
             items=Expression(value=self.items),
             activities=[activity.to_adf() for activity in self.activities],
             depends_on=[
-                ActivityDependency(
-                    activity=dep_name, dependency_conditions=dep_conditions
-                )
+                ActivityDependency(activity=dep_name, dependency_conditions=dep_conditions)
                 for dep_name, dep_conditions in self.depends_on.items()
             ],
         )
@@ -104,9 +95,7 @@ class AdfSetVariableActivity(AdfActivity):
             name=self.name,
             value=self.value,
             depends_on=[
-                ActivityDependency(
-                    activity=dep_name, dependency_conditions=dep_conditions
-                )
+                ActivityDependency(activity=dep_name, dependency_conditions=dep_conditions)
                 for dep_name, dep_conditions in self.depends_on.items()
             ],
         )

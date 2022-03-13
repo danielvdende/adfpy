@@ -68,9 +68,7 @@ temp_to_archive = AdfCopyActivity(
     pipeline=parent_pipeline,
 )
 
-ingest = AdfDatabricksSparkPythonActivity(
-    name="ingest", python_file="foo.py", pipeline=parent_pipeline
-)
+ingest = AdfDatabricksSparkPythonActivity(name="ingest", python_file="foo.py", pipeline=parent_pipeline)
 
 delete_temp_files = AdfDeleteActivity(
     name="delete_temp_files",
