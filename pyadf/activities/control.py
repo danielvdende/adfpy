@@ -10,8 +10,8 @@ from azure.mgmt.datafactory.models import (
     SetVariableActivity,
 )
 
-from better_adf.activity import AdfActivity
-from better_adf.pipeline import AdfPipeline
+from pyadf.activity import AdfActivity
+from pyadf.pipeline import AdfPipeline
 
 
 class AdfExecutePipelineActivity(AdfActivity):

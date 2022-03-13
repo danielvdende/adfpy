@@ -7,7 +7,7 @@ from azure.identity import ClientSecretCredential
 from azure.mgmt.datafactory import DataFactoryManagementClient
 from azure.mgmt.resource import ResourceManagementClient
 
-from better_adf.pipeline import AdfPipeline
+from pyadf.pipeline import AdfPipeline
 
 subscription_id = "5ddf05c0-b972-44ca-b90a-3e49b5de80dd"
 rg_name = "daniel-playground"
@@ -20,7 +20,7 @@ credentials = ClientSecretCredential(
 resource_client = ResourceManagementClient(credentials, subscription_id)
 adf_client = DataFactoryManagementClient(credentials, subscription_id)
 
-adf_pipelines_path = Path("/Users/daniel/code/opensource/better_adf/examples/")
+adf_pipelines_path = Path("/Users/daniel/code/opensource/pyadf/examples/")
 
 # 1. fetch existing pipelines from ADF
 existing_pipelines = [

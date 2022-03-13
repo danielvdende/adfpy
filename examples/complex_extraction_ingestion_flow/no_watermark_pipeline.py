@@ -1,9 +1,9 @@
 from azure.mgmt.datafactory.models import BlobSource, BlobSink
 
 
-from better_adf.activities.control import AdfSetVariableActivity
-from better_adf.activities.execution import AdfCopyActivity
-from better_adf.pipeline import AdfPipeline
+from pyadf.activities.control import AdfSetVariableActivity
+from pyadf.activities.execution import AdfCopyActivity
+from pyadf.pipeline import AdfPipeline
 
 no_watermark_pipeline = AdfPipeline(
     name="complex_extraction_ingestion_flow_no_watermark",
