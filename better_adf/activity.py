@@ -1,16 +1,23 @@
 import abc
-from typing import List, Union
+from typing import List, Union, Dict
 
 
 class AdfActivity:
-    def __init__(self, name):
+    # TODO: figure out if there's a better way here. We make the type hint a string to avoid a circular import
+    def __init__(self, name, pipeline: "AdfPipeline" = None):  # noqa: F821
         self.name = name
         self.depends_on = dict()
+        if pipeline:
+            pipeline.activities.append(self)
 
     def add_dependency(self, activity_name: str, dependency_conditions: List[str] = None):
         if not dependency_conditions:
             dependency_conditions = ["Succeeded"]
         self.depends_on[activity_name] = dependency_conditions
+
+    def add_dependencies(self, dependencies: Dict[str, List[str]]):
+        for activity_name, conditions in dependencies.items():
+            self.add_dependency(activity_name, conditions)
 
     def __rshift__(self, other: Union["AdfActivity", List["AdfActivity"]]):
         """Implements Activity >> Activity"""

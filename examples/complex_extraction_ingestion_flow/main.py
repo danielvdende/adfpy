@@ -1,9 +1,11 @@
+# TODO: we should abstract this away, it's not nice to have to deal with these models
 from azure.mgmt.datafactory.models import BlobSource, BlobSink
 
 from better_adf.activities.control import (
     AdfExecutePipelineActivity,
     AdfIfConditionActivity,
     AdfForEachActivity,
+    AdfSetVariableActivity,
 )
 from better_adf.activities.execution import (
     AdfCopyActivity,
@@ -11,6 +13,17 @@ from better_adf.activities.execution import (
     AdfDatabricksSparkPythonActivity,
 )
 from better_adf.pipeline import AdfPipeline
+from examples.complex_extraction_ingestion_flow.no_watermark_pipeline import (
+    no_watermark_pipeline,
+)
+from examples.complex_extraction_ingestion_flow.watermark_pipeline import (
+    watermark_pipeline,
+)
+
+parent_pipeline = AdfPipeline(
+    name="complex_extraction_ingestion_flow",
+    depends_on_pipelines={watermark_pipeline, no_watermark_pipeline},
+)
 
 fetch = AdfForEachActivity(
     name="fetch",
@@ -19,10 +32,22 @@ fetch = AdfForEachActivity(
         AdfIfConditionActivity(
             name="if_foo",
             expression="",
-            if_false_activities=[AdfExecutePipelineActivity(name="run_copyPipeline", pipeline_name="copyPipeline")],
-            if_true_activities=[AdfExecutePipelineActivity(name="run_copyPipeline", pipeline_name="copyPipeline")],
-        )
+            if_false_activities=[
+                AdfExecutePipelineActivity(
+                    name="run_no_watermark",
+                    pipeline_name="complex_extraction_ingestion_flow_no_watermark",
+                )
+            ],
+            if_true_activities=[
+                AdfExecutePipelineActivity(
+                    name="run_watermark",
+                    pipeline_name="complex_extraction_ingestion_flow_watermark",
+                )
+            ],
+        ),
+        AdfSetVariableActivity("foo", "bar"),
     ],
+    pipeline=parent_pipeline,
 )
 
 temp_to_landing = AdfCopyActivity(
@@ -31,6 +56,7 @@ temp_to_landing = AdfCopyActivity(
     output_dataset_name="landing",
     source_type=BlobSource,
     sink_type=BlobSink,
+    pipeline=parent_pipeline,
 )
 
 temp_to_archive = AdfCopyActivity(
@@ -39,41 +65,32 @@ temp_to_archive = AdfCopyActivity(
     output_dataset_name="staging",
     source_type=BlobSource,
     sink_type=BlobSink,
+    pipeline=parent_pipeline,
 )
 
-ingest = AdfDatabricksSparkPythonActivity(name="ingest", python_file="foo.py")
+ingest = AdfDatabricksSparkPythonActivity(name="ingest", python_file="foo.py", pipeline=parent_pipeline)
 
-delete_temp_files = AdfDeleteActivity(name="delete_temp_files",
-                                      dataset_name="staging",
-                                      recursive=True,
-                                      wildcard="foo_temp*")
+delete_temp_files = AdfDeleteActivity(
+    name="delete_temp_files",
+    dataset_name="staging",
+    recursive=True,
+    wildcard="foo_temp*",
+    pipeline=parent_pipeline,
+)
 
-delete_landing_files = AdfDeleteActivity(name="delete_landing_files",
-                                         dataset_name="landing",
-                                         recursive=True,
-                                         wildcard="foo_landing*")
+delete_landing_files = AdfDeleteActivity(
+    name="delete_landing_files",
+    dataset_name="landing",
+    recursive=True,
+    wildcard="foo_landing*",
+    pipeline=parent_pipeline,
+)
 
 
 fetch >> [temp_to_archive, temp_to_landing] >> ingest >> delete_landing_files
-temp_to_archive >> delete_temp_files
-
-# TODO: allow bitshift with lists of activities
-# fetch >> temp_to_landing >> ingest
-# fetch >> temp_to_archive >> ingest >> delete_landing_files
-# temp_to_archive >> delete_temp_files
-
-print(temp_to_archive.depends_on)
-print(delete_temp_files.depends_on)
-
-# would be cool if we could get rid of this silly list of activities. It's a bit ott to define it twice
-pipeline = AdfPipeline(
-    name="complex_extraction_ingestion_flow",
-    activities=[fetch, temp_to_landing, temp_to_archive, ingest, delete_temp_files, delete_landing_files],
+delete_temp_files.add_dependencies(
+    {
+        temp_to_landing.name: ["Succeeded", "Skipped"],
+        temp_to_archive.name: ["Succeeded", "Skipped"],
+    }
 )
-
-
-# lookup
-
-# set variable
-
-# stored procedure
