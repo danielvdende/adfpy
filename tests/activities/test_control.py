@@ -1,4 +1,4 @@
-from pyadf.activities import control as victim
+from adfpy.activities import control as victim
 
 from azure.mgmt.datafactory.models import ForEachActivity, SetVariableActivity, Expression, ActivityDependency
 

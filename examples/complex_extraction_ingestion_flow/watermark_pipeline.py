@@ -1,13 +1,13 @@
 from azure.mgmt.datafactory.models import BlobSource, BlobSink
 
 
-from pyadf.activities.control import AdfSetVariableActivity, AdfIfConditionActivity
-from pyadf.activities.execution import (
+from adfpy.activities.control import AdfSetVariableActivity, AdfIfConditionActivity
+from adfpy.activities.execution import (
     AdfCopyActivity,
     AdfLookupActivity,
     AdfSqlServerStoredProcedureActivity,
 )
-from pyadf.pipeline import AdfPipeline
+from adfpy.pipeline import AdfPipeline
 
 watermark_pipeline = AdfPipeline(
     name="complex_extraction_ingestion_flow_watermark",

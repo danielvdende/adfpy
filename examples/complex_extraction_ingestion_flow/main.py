@@ -1,18 +1,18 @@
 # TODO: we should abstract this away, it's not nice to have to deal with these models
 from azure.mgmt.datafactory.models import BlobSource, BlobSink
 
-from pyadf.activities.control import (
+from adfpy.activities.control import (
     AdfExecutePipelineActivity,
     AdfIfConditionActivity,
     AdfForEachActivity,
     AdfSetVariableActivity,
 )
-from pyadf.activities.execution import (
+from adfpy.activities.execution import (
     AdfCopyActivity,
     AdfDeleteActivity,
     AdfDatabricksSparkPythonActivity,
 )
-from pyadf.pipeline import AdfPipeline
+from adfpy.pipeline import AdfPipeline
 from examples.complex_extraction_ingestion_flow.no_watermark_pipeline import (
     no_watermark_pipeline,
 )

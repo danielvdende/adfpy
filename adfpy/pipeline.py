@@ -2,7 +2,7 @@ from typing import List
 
 from azure.mgmt.datafactory.models import PipelineResource
 
-from pyadf.activity import AdfActivity
+from adfpy.activity import AdfActivity
 
 
 class AdfPipeline:

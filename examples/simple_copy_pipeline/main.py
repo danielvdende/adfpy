@@ -1,7 +1,7 @@
 from azure.mgmt.datafactory.models import BlobSource, BlobSink
 
-from pyadf.activities.execution import AdfCopyActivity, AdfDatabricksSparkPythonActivity
-from pyadf.pipeline import AdfPipeline
+from adfpy.activities.execution import AdfCopyActivity, AdfDatabricksSparkPythonActivity
+from adfpy.pipeline import AdfPipeline
 
 extract = AdfCopyActivity(
     name="copyBlobToBlob",

@@ -10,7 +10,7 @@ from azure.mgmt.datafactory.models import (
     SqlServerStoredProcedureActivity,
 )
 
-from pyadf.activity import AdfActivity
+from adfpy.activity import AdfActivity
 
 
 class AdfCopyActivity(AdfActivity):

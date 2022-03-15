@@ -1,5 +1,5 @@
 [tool.poetry]
-name = "pyadf"
+name = "adfpy"
 version = "0.0.0"
 description = "A Pythonic wrapper for Azure Data Factory"
 authors = ["Daniel van der Ende <daniel.vanderende@gmail.com>"]
