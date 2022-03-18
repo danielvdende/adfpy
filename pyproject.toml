@@ -4,6 +4,10 @@ version = "0.0.0"
 description = "A Pythonic wrapper for Azure Data Factory"
 authors = ["Daniel van der Ende <daniel.vanderende@gmail.com>"]
 license = "Apache"
+readme = "README.md"
+homepage = "https://github.com/danielvdende/adfpy"
+repository = "https://github.com/danielvdende/adfpy"
+keywords = ["azure", "data", "factory"]
 
 [tool.poetry.dependencies]
 python = "^3.8"
