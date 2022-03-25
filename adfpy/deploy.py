@@ -1,6 +1,7 @@
 import argparse
 import importlib.util
 import os
+from dataclasses import dataclass
 from pathlib import Path
 from typing import Set, List
 
@@ -10,37 +11,52 @@ from azure.mgmt.datafactory import DataFactoryManagementClient
 from adfpy.pipeline import AdfPipeline
 
 
-def fetch_existing_pipelines(adf_client: DataFactoryManagementClient,
-                             resource_group: str,
-                             data_factory: str) -> List[str]:
-    """
+@dataclass
+class ConfiguredDataFactory:
+    resource_group: str
+    name: str
+    client: DataFactoryManagementClient
+
+
+# global variable to store which pipelines have been processed
+processed_pipelines_names = []
+
+
+def fetch_existing_pipelines(adf: ConfiguredDataFactory) -> List[str]:
+    """Fetch existing pipelines from the Azure Data Factory instance
+
+    The pipelines are represented only by their names as this is sufficient for further usage.
 
     Args:
-        adf_client:
-        resource_group:
-        data_factory:
+        adf: authorized data factory client
 
     Returns:
-
+        List of pipeline names found in the configured Azure Data Factory
     """
     return [
-        x.name for x in adf_client.pipelines.list_by_factory(resource_group_name=resource_group,
-                                                             factory_name=data_factory)
+        x.name for x in adf.client.pipelines.list_by_factory(resource_group_name=adf.resource_group,
+                                                             factory_name=adf.name)
     ]
 
 
 def load_pipelines_from_file(file_path: Path) -> Set[AdfPipeline]:
-    """
-        # 2. Retrieve all pipeline objects from path (which can be a dir)
+    """Load all AdfPipeline objects from a file
+
+    This function only works with single files. Raises IsADirectoryError if the provided path is a directory
 
     Args:
         file_path:
 
-    Returns:
+    Raises: IsADirectoryError if the provided path is a directory
 
+    Returns:
+        Set of AdfPipeline objects found in the provided file
     """
+    if file_path.is_dir():
+        raise IsADirectoryError("load_pipelines_from_file is not intended to load pipelines from a directory."
+                                "Please use load_pipelines_from_path instead")
     mod_spec = importlib.util.spec_from_file_location(
-        "main_foo",
+        "main",
         file_path,
     )
     module = importlib.util.module_from_spec(mod_spec)
@@ -49,14 +65,18 @@ def load_pipelines_from_file(file_path: Path) -> Set[AdfPipeline]:
 
 
 def load_pipelines_from_path(path: Path, pipelines: Set[AdfPipeline] = None) -> Set[AdfPipeline]:
-    """
+    """Load all AdfPipeline objects from a given path.
+
+    The path can be either a directory or a file. If it's a directory, the function will recursively step through
+    the directory structure and look for all `.py` files. The pipelines parameter of this function is used for this
+    recursion.
 
     Args:
-        path:
-        pipelines:
+        path: Path to scan for AdfPipeline objects
+        pipelines: Set of AdfPipelines found. Used for recursively adding pipelines as they are found
 
     Returns:
-
+        The final set of AdfPipelines found in the path
     """
     if not pipelines:
         pipelines = set()
@@ -69,79 +89,65 @@ def load_pipelines_from_path(path: Path, pipelines: Set[AdfPipeline] = None) -> 
     return pipelines
 
 
-def create_or_update_pipeline(adf_client: DataFactoryManagementClient,
-                              resource_group: str,
-                              data_factory: str,
+def create_or_update_pipeline(adf: ConfiguredDataFactory,
                               pipeline: AdfPipeline):
-    """
+    """Create or update a pipeline in Azure Data Factory based on the provided pipeline definition
+
+    This function will also ensure that any pipelines that the provided pipeline depends on are created first. To
+    achieve this, it makes use of the `processed_pipelines_names` global variable. After creating/updating a pipeline,
+    this function will ensure that pipeline is added to this global, so it will not be created/updated again.
 
     Args:
-        adf_client:
-        resource_group:
-        data_factory:
-        pipeline:
-
-    Returns:
-
+        adf: ConfiguredDataFactory object
+        pipeline: AdfPipeline object based on provided configuration
     """
     for required_pipeline in pipeline.depends_on_pipelines:
         # We only process a required pipeline if it hasn't been processed before
         if required_pipeline.name not in processed_pipelines_names:
-            create_or_update_pipeline(adf_client, resource_group, data_factory, required_pipeline)
+            create_or_update_pipeline(adf, required_pipeline)
     print(f"Creating/updating {pipeline.name}")
-    adf_client.pipelines.create_or_update(resource_group, data_factory, pipeline.name, pipeline.to_adf())
+    adf.client.pipelines.create_or_update(adf.resource_group, adf.name, pipeline.name, pipeline.to_adf())
     processed_pipelines_names.append(pipeline.name)
 
 
 def ensure_all_pipelines_up_to_date(pipelines: Set[AdfPipeline],
-                                    adf_client: DataFactoryManagementClient,
-                                    resource_group: str,
-                                    data_factory: str):
-    """
+                                    adf: ConfiguredDataFactory):
+    """Create or update pipelines in ADF based on a provided set of pipelines.
+
+    This function checks with the global `processed_pipelines_names` variable to avoid duplicate processing.
+    There is no functional requirement for this (i.e. it would be ok to process the same pipeline multiple times), but
+    it's not very nice.
 
     Args:
-        pipelines:
-        adf_client:
-        resource_group:
-        data_factory:
-
-    Returns:
-
+        pipelines: Set of AdfPipeline objects retrieved from the local path
+        adf: ConfiguredDataFactory object
     """
     for p in pipelines:
         if p.name not in processed_pipelines_names:
-            create_or_update_pipeline(adf_client, resource_group, data_factory, p)
+            create_or_update_pipeline(adf, p)
 
 
-def remove_stale_pipelines(adf_client: DataFactoryManagementClient, resource_group: str, data_factory: str):
-    """
+def remove_stale_pipelines(adf: ConfiguredDataFactory):
+    """Removes any pipelines that are (no longer) available in the configured (local) pipeline path
+
+    This function is destructive, as any pipeline not managed by adfPy will be removed.
 
     Args:
-        adf_client:
-        resource_group:
-        data_factory:
-
-    Returns:
-
+        adf: ConfiguredDataFactory object
     """
-    existing_pipelines = fetch_existing_pipelines(adf_client, resource_group, data_factory)
-    print(existing_pipelines)
-    print(processed_pipelines_names)
+    existing_pipelines = fetch_existing_pipelines(adf)
     for p in existing_pipelines:
         if p not in processed_pipelines_names:
             print(f"Pipeline {p} no longer exists. Deleting from ADF")
-            adf_client.pipelines.delete(resource_group_name=resource_group, factory_name=data_factory, pipeline_name=p)
+            adf.client.pipelines.delete(resource_group_name=adf.resource_group, factory_name=adf.name, pipeline_name=p)
 
 
-# global variable to store which pipelines have been processed
-processed_pipelines_names = []
+def configure_data_factory() -> ConfiguredDataFactory:
+    """Configure your data factory, based mostly on environment variables
 
-
-def run_deployment():
-    parser = argparse.ArgumentParser(description='Parse input parameters')
-    parser.add_argument('--pipelines_path', type=Path, dest="pipelines_path", help='Path containing AdfPy pipelines')
-    args = parser.parse_args()
-
+    Returns:
+        A ConfiguredDataFactory object, with all required fields for interacting with ADF
+    """
     subscription_id = os.environ["AZURE_SUBSCRIPTION_ID"]
     resource_group = os.environ["AZURE_RESOURCE_GROUP_NAME"]
     data_factory = os.environ["AZURE_DATA_FACTORY_NAME"]
@@ -152,11 +158,22 @@ def run_deployment():
     )
     adf_client = DataFactoryManagementClient(credentials, subscription_id)
 
+    return ConfiguredDataFactory(resource_group, data_factory, adf_client)
+
+
+def run_deployment():
+    parser = argparse.ArgumentParser(description='Parse input parameters')
+    parser.add_argument('--pipelines_path', type=Path, dest="pipelines_path", help='Path containing AdfPy pipelines',
+                        required=True)
+    args = parser.parse_args()
+
+    configured_adf = configure_data_factory()
+
     pipelines = load_pipelines_from_path(args.pipelines_path)
 
-    ensure_all_pipelines_up_to_date(pipelines, adf_client, resource_group, data_factory)
+    ensure_all_pipelines_up_to_date(pipelines, configured_adf)
 
-    remove_stale_pipelines(adf_client, resource_group, data_factory)
+    remove_stale_pipelines(configured_adf)
 
 
 if __name__ == "__main__":
