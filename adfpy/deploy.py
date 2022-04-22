@@ -1,6 +1,7 @@
 import argparse
 import importlib.util
 import os
+
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Set, List
@@ -107,6 +108,8 @@ def create_or_update_pipeline(adf: ConfiguredDataFactory,
             create_or_update_pipeline(adf, required_pipeline)
     print(f"Creating/updating {pipeline.name}")
     adf.client.pipelines.create_or_update(adf.resource_group, adf.name, pipeline.name, pipeline.to_adf())
+    if pipeline.schedule:
+        adf.client.triggers.create_or_update(adf.resource_group, adf.name, pipeline.schedule.name, pipeline.schedule.to_adf())
     processed_pipelines_names.append(pipeline.name)
 
 
@@ -173,7 +176,8 @@ def run_deployment():
 
     ensure_all_pipelines_up_to_date(pipelines, configured_adf)
 
-    remove_stale_pipelines(configured_adf)
+    # TODO: bug in deletion hierarchy flow
+    # remove_stale_pipelines(configured_adf)
 
 
 if __name__ == "__main__":
