@@ -8,7 +8,12 @@ from adfpy.trigger import AdfScheduleTrigger
 
 
 class AdfPipeline:
-    def __init__(self, name, activities: List[AdfActivity] = None, depends_on_pipelines={}, schedule=None, start_time=None):
+    def __init__(self,
+                 name: str,
+                 activities: List[AdfActivity] = None,
+                 depends_on_pipelines={},
+                 schedule=None,
+                 start_time=None):
         self.name = name
         self.activities = activities
         self.schedule = schedule
@@ -39,4 +44,3 @@ class AdfPipeline:
 
     def __repr__(self):
         return f"<AdfPipeline: {self.name}>"
-

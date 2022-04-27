@@ -109,7 +109,10 @@ def create_or_update_pipeline(adf: ConfiguredDataFactory,
     print(f"Creating/updating {pipeline.name}")
     adf.client.pipelines.create_or_update(adf.resource_group, adf.name, pipeline.name, pipeline.to_adf())
     if pipeline.schedule:
-        adf.client.triggers.create_or_update(adf.resource_group, adf.name, pipeline.schedule.name, pipeline.schedule.to_adf())
+        adf.client.triggers.create_or_update(adf.resource_group,
+                                             adf.name,
+                                             pipeline.schedule.name,
+                                             pipeline.schedule.to_adf())
     processed_pipelines_names.append(pipeline.name)
 
 

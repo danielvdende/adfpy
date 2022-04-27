@@ -9,7 +9,6 @@ from azure.mgmt.datafactory.models import (
     TriggerPipelineReference,
     TriggerResource,
     RecurrenceSchedule,
-    RecurrenceFrequency
 )
 
 
@@ -23,13 +22,13 @@ class AdfCronExpression:
     day_of_week: Union[str, int]
 
     days_of_week_adf_map = {
-        0: "Sunday",
-        1: "Monday",
-        2: "Tuesday",
-        3: "Wednesday",
-        4: "Thursday",
-        5: "Friday",
-        6: "Saturday"
+        "0": "Sunday",
+        "1": "Monday",
+        "2": "Tuesday",
+        "3": "Wednesday",
+        "4": "Thursday",
+        "5": "Friday",
+        "6": "Saturday"
     }
 
     def __post_init__(self):
@@ -47,7 +46,9 @@ class AdfScheduleTrigger:
         self.schedule = schedule
         self.start_time = start_time
         self.time_zone = time_zone
-        self.pipelines = [TriggerPipelineReference(pipeline_reference=PipelineReference(reference_name=p)) for p in pipelines]
+        self.pipelines = [
+            TriggerPipelineReference(pipeline_reference=PipelineReference(reference_name=p)) for p in pipelines
+        ]
 
         self.preset_expressions_mapping = {
             "@hourly": "Hour",
@@ -59,7 +60,13 @@ class AdfScheduleTrigger:
 
     def to_adf(self):
         scheduler_recurrence = self._convert_cron_to_adf()
-        tr_properties = TriggerResource(properties=ScheduleTrigger(recurrence=scheduler_recurrence, pipelines=self.pipelines, annotations=[], additional_properties={}))
+        tr_properties = TriggerResource(
+            properties=ScheduleTrigger(recurrence=scheduler_recurrence,
+                                       pipelines=self.pipelines,
+                                       annotations=[],
+                                       additional_properties={}
+                                       )
+        )
         return tr_properties
 
     def convert_preset_expression_to_adf(self, schedule):
@@ -79,8 +86,10 @@ class AdfScheduleTrigger:
     def _convert_cron_to_adf(self):
         """
         Basic recurrence options: minutes/hours
-        Advanced recurrence options: days/weeks  -> basic support for this kind of interval is fine. But the more advanced things like
-        running every 50 days is harder. This isn't something cron can do by default it seems. Would need further investigation.
+        Advanced recurrence options: days/weeks
+        -> basic support for this kind of interval is fine. But the more advanced things like
+        running every 50 days is harder. This isn't something cron can do by default it seems.
+        Would need further investigation.
 
             Convert a cron-like string to a set of objects understood by adf
 
@@ -112,7 +121,7 @@ class AdfScheduleTrigger:
                         else:
                             # 5 * * * *
                             return ScheduleTriggerRecurrence(frequency="Hour",
-                                                             interval=cron_components.minute,
+                                                             interval=int(cron_components.minute),
                                                              start_time=self.start_time,
                                                              time_zone=self.time_zone)
                     else:
@@ -123,7 +132,7 @@ class AdfScheduleTrigger:
                                                              start_time=self.start_time,
                                                              time_zone=self.time_zone,
                                                              schedule=RecurrenceSchedule(
-                                                                hours=[cron_components.hour],
+                                                                hours=[int(cron_components.hour)],
                                                                 minutes=[i for i in range(60)]
                                                              ))
                         else:
@@ -133,8 +142,8 @@ class AdfScheduleTrigger:
                                                              start_time=self.start_time,
                                                              time_zone=self.time_zone,
                                                              schedule=RecurrenceSchedule(
-                                                                 hours=[cron_components.hour],
-                                                                 minutes=[cron_components.minute]
+                                                                 hours=[int(cron_components.hour)],
+                                                                 minutes=[int(cron_components.minute)]
                                                              ))
                 else:
                     if cron_components.hour == "*":
@@ -147,7 +156,7 @@ class AdfScheduleTrigger:
                                                              schedule=RecurrenceSchedule(
                                                                  hours=[i for i in range(24)],
                                                                  minutes=[i for i in range(60)],
-                                                                 month_days=[cron_components.day_of_month]
+                                                                 month_days=[int(cron_components.day_of_month)]
                                                              ))
                         else:
                             # 5 * 5 * *
@@ -157,8 +166,8 @@ class AdfScheduleTrigger:
                                                              time_zone=self.time_zone,
                                                              schedule=RecurrenceSchedule(
                                                                  hours=[i for i in range(24)],
-                                                                 minutes=[5],
-                                                                 month_days=[cron_components.day_of_month]
+                                                                 minutes=[int(cron_components.minute)],
+                                                                 month_days=[int(cron_components.day_of_month)]
                                                              ))
                     else:
                         if cron_components.minute == "*":
@@ -168,9 +177,9 @@ class AdfScheduleTrigger:
                                                              start_time=self.start_time,
                                                              time_zone=self.time_zone,
                                                              schedule=RecurrenceSchedule(
-                                                                 hours=[cron_components.hour],
+                                                                 hours=[int(cron_components.hour)],
                                                                  minutes=[i for i in range(60)],
-                                                                 month_days=[cron_components.day_of_month]
+                                                                 month_days=[int(cron_components.day_of_month)]
                                                              ))
                         else:
                             # 5 5 5 * *
@@ -179,9 +188,9 @@ class AdfScheduleTrigger:
                                                              start_time=self.start_time,
                                                              time_zone=self.time_zone,
                                                              schedule=RecurrenceSchedule(
-                                                                 hours=[cron_components.hour],
-                                                                 minutes=[cron_components.minute],
-                                                                 month_days=[cron_components.day_of_month]
+                                                                 hours=[int(cron_components.hour)],
+                                                                 minutes=[int(cron_components.minute)],
+                                                                 month_days=[int(cron_components.day_of_month)]
                                                              ))
             else:
                 if cron_components.day_of_month == "*":
@@ -205,7 +214,7 @@ class AdfScheduleTrigger:
                                                              time_zone=self.time_zone,
                                                              schedule=RecurrenceSchedule(
                                                                  hours=[i for i in range(24)],
-                                                                 minutes=[cron_components.minute],
+                                                                 minutes=[int(cron_components.minute)],
                                                                  week_days=[cron_components.day_of_week_adf]
                                                              ))
                     else:
@@ -216,7 +225,7 @@ class AdfScheduleTrigger:
                                                              start_time=self.start_time,
                                                              time_zone=self.time_zone,
                                                              schedule=RecurrenceSchedule(
-                                                                 hours=[cron_components.hour],
+                                                                 hours=[int(cron_components.hour)],
                                                                  minutes=[i for i in range(60)],
                                                                  week_days=[cron_components.day_of_week_adf]
                                                              ))
@@ -227,15 +236,14 @@ class AdfScheduleTrigger:
                                                              start_time=self.start_time,
                                                              time_zone=self.time_zone,
                                                              schedule=RecurrenceSchedule(
-                                                                 hours=[cron_components.hour],
-                                                                 minutes=[cron_components.minute],
+                                                                 hours=[int(cron_components.hour)],
+                                                                 minutes=[int(cron_components.minute)],
                                                                  week_days=[cron_components.day_of_week_adf]
                                                              ))
                 else:
                     raise NotSupportedError("""
                         There are a number of Cron expressions that cannot be expressed properly with ADF's scheduling
-                        logic. These are: """
-                    )
+                        logic. These are: """)
                     # if self.hour == "*":
                     #     if self.minute == "*":
                     #         # Not possible
@@ -250,6 +258,3 @@ class AdfScheduleTrigger:
                     #     else:
                     #         # Not possible
                     #         # 5 5 5 * 5
-
-
-
