@@ -1,3 +1,4 @@
+from datetime import datetime
 from typing import List
 
 from azure.mgmt.datafactory.models import PipelineResource
@@ -7,19 +8,24 @@ from adfpy.trigger import AdfScheduleTrigger
 
 
 class AdfPipeline:
-    def __init__(self, name, activities: List[AdfActivity] = None, depends_on_pipelines={}, schedule=None):
+    def __init__(self, name, activities: List[AdfActivity] = None, depends_on_pipelines={}, schedule=None, start_time=None):
         self.name = name
         self.activities = activities
         self.schedule = schedule
+        self.start_time = start_time
         if not activities:
             self.activities = []
 
         self.depends_on_pipelines = depends_on_pipelines
 
         if schedule:
+            if not self.start_time:
+                self.start_time = datetime.now()
             self.schedule = AdfScheduleTrigger(name=f"{self.name}-trigger",
                                                schedule=self.schedule,
-                                               pipelines=[self.name])
+                                               start_time=self.start_time,
+                                               pipelines=[self.name]
+                                               )
 
     def to_adf(self):
         return PipelineResource(activities=[act.to_adf() for act in self.activities])

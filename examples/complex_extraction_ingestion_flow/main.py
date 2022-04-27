@@ -23,7 +23,7 @@ from examples.complex_extraction_ingestion_flow.watermark_pipeline import (
 parent_pipeline = AdfPipeline(
     name="complex_extraction_ingestion_flow",
     depends_on_pipelines={watermark_pipeline, no_watermark_pipeline},
-    schedule="5 4 * * *"
+    schedule="@daily"
 )
 
 fetch = AdfForEachActivity(
