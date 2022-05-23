@@ -11,10 +11,11 @@ from azure.mgmt.datafactory.models import (
     RecurrenceSchedule,
 )
 
+from adfpy.error import NotSupportedError, InvalidCronExpressionError
+
 
 @dataclass
 class AdfCronExpression:
-    # TODO: add validation for valid cron (e.g. max hours, max minutes)
     minute: Union[str, int]
     hour: Union[str, int]
     day_of_month: Union[str, int]
@@ -32,12 +33,30 @@ class AdfCronExpression:
     }
 
     def __post_init__(self):
-        if not self.day_of_week == "*":
-            self.day_of_week_adf = self.days_of_week_adf_map[self.day_of_week]
-
-
-class NotSupportedError(Exception):
-    pass
+        # For now, we implement our own validation logic here. TODO: consider using pydantic
+        # TODO: how about pattern matching for this?
+        if self.minute != "*":
+            if not 0 <= int(self.minute) <= 59:
+                raise InvalidCronExpressionError(f"Invalid minutes specified. Value entered: {self.minute}. "
+                                                 f"Please set minutes in the range 0-59 or *")
+        if self.hour != "*":
+            if not 0 <= int(self.hour) <= 23:
+                raise InvalidCronExpressionError(f"Invalid hours specified. Value entered: {self.hour}. "
+                                                 f"Please set hours in the range 0-23 or *")
+        if self.day_of_month != "*":
+            if not 0 <= int(self.day_of_month) <= 31:
+                raise InvalidCronExpressionError(f"Invalid day_of_month specified. Value entered: {self.day_of_month}. "
+                                                 f"Please set day_of_month in the range 1-31 or *")
+        if self.month != "*":
+            if not 1 <= int(self.month) <= 12:
+                raise InvalidCronExpressionError(f"Invalid month specified. Value entered: {self.month}. "
+                                                 f"Please set month in the range 1-12 or *")
+        if self.day_of_week != "*":
+            if not 0 <= int(self.day_of_week) <= 6:
+                raise InvalidCronExpressionError(f"Invalid day_of_week specified. Value entered: {self.day_of_week}. "
+                                                 f"Please set day_of_week in the range 0-6 or *")
+            else:
+                self.day_of_week_adf = self.days_of_week_adf_map[self.day_of_week]
 
 
 class AdfScheduleTrigger:
@@ -70,7 +89,8 @@ class AdfScheduleTrigger:
         return tr_properties
 
     def convert_preset_expression_to_adf(self, schedule):
-        # assumption: schedule is in the mapping
+        if schedule not in self.preset_expressions_mapping:
+            raise ValueError(f"Expression {schedule} is not in the predefined expressions mapping")
         mapped_frequency = self.preset_expressions_mapping[schedule]
         if mapped_frequency:
             return ScheduleTriggerRecurrence(frequency=mapped_frequency,
@@ -106,7 +126,9 @@ class AdfScheduleTrigger:
             return self.convert_preset_expression_to_adf(self.schedule)
         else:
             cron_components = self.schedule.split(" ")
-            assert len(cron_components) == 5
+            if len(cron_components) != 5:
+                raise InvalidCronExpressionError(f"The provided cron expression: {self.schedule} has the wrong number "
+                                                 f"of components. There should be 5")
             cron_components = AdfCronExpression(*cron_components)
 
             if cron_components.day_of_week == "*":
@@ -241,20 +263,12 @@ class AdfScheduleTrigger:
                                                                  week_days=[cron_components.day_of_week_adf]
                                                              ))
                 else:
-                    raise NotSupportedError("""
+                    unsupported_expressions = [
+                        {"* * 5 * 5": "At every minute on day-of-month 5 and on Friday."},
+                        {"5 * 5 * 5": "At minute 5 on day-of-month 5 and on Friday."},
+                        {"* 5 5 * 5": "At every minute past hour 5 on day-of-month 5 and on Friday."},
+                        {"5 5 5 * 5": "At 05:05 on day-of-month 5 and on Friday."}
+                    ]
+                    raise NotSupportedError(f"""
                         There are a number of Cron expressions that cannot be expressed properly with ADF's scheduling
-                        logic. These are: """)
-                    # if self.hour == "*":
-                    #     if self.minute == "*":
-                    #         # Not possible
-                    #         # * * 5 * 5
-                    #     else:
-                    #         # Not possible
-                    #         # 5 * 5 * 5
-                    # else:
-                    #     if self.minute == "*":
-                    #         # Not possible
-                    #         # * 5 5 * 5
-                    #     else:
-                    #         # Not possible
-                    #         # 5 5 5 * 5
+                        logic. These are: {unsupported_expressions}""")
