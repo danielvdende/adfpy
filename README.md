@@ -1,4 +1,4 @@
-# adfPy
+# 🏭🍰 adfPy
 adfPy aims to make developers lives easier by wrapping the Azure Data Factory Python SDK with an intuitive, powerful, and easy to use API that hopefully will remind people of working with Apache Airflow ;-). 
 
 ## Install
@@ -26,9 +26,9 @@ Note:
 
 ## Still to come
 adfPy is still in development. As such, some ADF components are not yet supported:
-- datasets
-- linked services
-- triggers
+- Datasets
+- Linked services
+- Triggers (support for Schedule Triggers is available, but not for Tumbling Window, Custom Event, or Storage Event)
 
 ## Developer setup
 adfPy is built with [Poetry](https://python-poetry.org/). To setup a development environment run:
