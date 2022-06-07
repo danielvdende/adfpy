@@ -1,4 +1,4 @@
-from datetime import datetime
+from datetime import datetime, timezone
 from typing import List
 
 from azure.mgmt.datafactory.models import PipelineResource
@@ -25,7 +25,7 @@ class AdfPipeline:
 
         if schedule:
             if not self.start_time:
-                self.start_time = datetime.now()
+                self.start_time = datetime.now(tz=timezone.utc)
             self.schedule = AdfScheduleTrigger(name=f"{self.name}-trigger",
                                                schedule=self.schedule,
                                                start_time=self.start_time,
@@ -40,7 +40,7 @@ class AdfPipeline:
         return self.name == other.name
 
     def __hash__(self):
-        return hash((self.name))
+        return hash(self.name)
 
     def __repr__(self):
         return f"<AdfPipeline: {self.name}>"

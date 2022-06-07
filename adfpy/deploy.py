@@ -179,8 +179,7 @@ def run_deployment():
 
     ensure_all_pipelines_up_to_date(pipelines, configured_adf)
 
-    # TODO: bug in deletion hierarchy flow
-    # remove_stale_pipelines(configured_adf)
+    remove_stale_pipelines(configured_adf)
 
 
 if __name__ == "__main__":

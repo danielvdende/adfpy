@@ -8,10 +8,6 @@ from adfpy.error import InvalidCronExpressionError, NotSupportedError
 
 
 class TestAdfScheduleTrigger:
-    # TODO:
-    # - hit notsupportederror crons
-    # - check validity of schedule (e.g. hours capped at 23, minutes at 59 etc.)
-
     start_time = datetime(2022, 4, 27, 21, 18)
     cron_test_data = [
         (
@@ -174,13 +170,6 @@ class TestAdfScheduleTrigger:
 
 
 class TestAdfCronExpression:
-
-    # minute: Union[str, int]
-    # hour: Union[str, int]
-    # day_of_month: Union[str, int]
-    # month: Union[str, int]
-    # day_of_week: Union[str, int]
-
     def test_invalid_minutes_cron_expression(self):
         with pytest.raises(InvalidCronExpressionError):
             victim.AdfCronExpression(minute=66, hour=12, day_of_month=5, month=5, day_of_week=3)
