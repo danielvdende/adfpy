@@ -15,4 +15,4 @@ ingest = AdfDatabricksSparkPythonActivity(name="ingest", python_file="foo.py")
 
 extract >> ingest
 
-pipeline = AdfPipeline(name="copyPipeline", activities=[extract, ingest])
+pipeline = AdfPipeline(name="copyPipeline", activities=[extract, ingest], schedule="* * 5 * *")
