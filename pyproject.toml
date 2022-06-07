@@ -19,6 +19,7 @@ pytest = "^7.0.1"
 flake8 = "^4.0.1"
 coverage = "^6.3.2"
 pytest-cov = "^3.0.0"
+mypy = "^0.961"
 
 [tool.poetry.scripts]
 adfpy-deploy = "adfpy.deploy:run_deployment"

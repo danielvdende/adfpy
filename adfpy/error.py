@@ -11,3 +11,7 @@ class NotSupportedError(AdfPyException):
 
 class InvalidCronExpressionError(AdfPyException):
     pass
+
+
+class PipelineModuleParseException(AdfPyException):
+    pass

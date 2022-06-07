@@ -1,6 +1,6 @@
 from typing import List
 
-from azure.mgmt.datafactory.models import (
+from azure.mgmt.datafactory.models import (  # type: ignore
     ActivityDependency,
     ExecutePipelineActivity,
     Expression,
@@ -19,7 +19,7 @@ class AdfExecutePipelineActivity(AdfActivity):
         super(AdfExecutePipelineActivity, self).__init__(name, pipeline)
         self.pipeline_name = pipeline_name
 
-    def to_adf(self):
+    def to_adf(self) -> ExecutePipelineActivity:
         return ExecutePipelineActivity(
             name=self.name,
             pipeline=PipelineReference(reference_name=self.pipeline_name),
@@ -44,7 +44,7 @@ class AdfIfConditionActivity(AdfActivity):
         self.if_false_activities = if_false_activities
         self.if_true_activities = if_true_activities
 
-    def to_adf(self):
+    def to_adf(self) -> IfConditionActivity:
         return IfConditionActivity(
             name=self.name,
             expression=Expression(value=self.expression),
@@ -60,7 +60,7 @@ class AdfIfConditionActivity(AdfActivity):
 class AdfForEachActivity(AdfActivity):
     def __init__(
         self,
-        name,
+        name: str,
         items: str,
         activities: List[AdfActivity],
         pipeline: AdfPipeline = None,
@@ -68,12 +68,13 @@ class AdfForEachActivity(AdfActivity):
         super(AdfForEachActivity, self).__init__(name, pipeline)
         self.items = items  # TODO: this now has to be an ADF expression. Probably want to revisit this
         self.activities = activities
-        # TODO: This is a workaround that means activities within a foreachactivity may only have a single linear line
-        #  of dependency
+
+        # WARNING This is a workaround that means activities within a foreachactivity may only have a single linear
+        # line of dependency
         for i in range(1, len(self.activities)):
             self.activities[i].add_dependency(self.activities[i - 1].name)
 
-    def to_adf(self):
+    def to_adf(self) -> ForEachActivity:
         return ForEachActivity(
             name=self.name,
             items=Expression(value=self.items),
@@ -86,11 +87,11 @@ class AdfForEachActivity(AdfActivity):
 
 
 class AdfSetVariableActivity(AdfActivity):
-    def __init__(self, name, value, pipeline: AdfPipeline = None):
+    def __init__(self, name: str, value: str, pipeline: AdfPipeline = None):
         super(AdfSetVariableActivity, self).__init__(name, pipeline)
         self.value = value
 
-    def to_adf(self):
+    def to_adf(self) -> SetVariableActivity:
         return SetVariableActivity(
             name=self.name,
             value=self.value,

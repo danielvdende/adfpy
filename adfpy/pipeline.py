@@ -1,7 +1,7 @@
 from datetime import datetime, timezone
 from typing import List
 
-from azure.mgmt.datafactory.models import PipelineResource
+from azure.mgmt.datafactory.models import PipelineResource  # type: ignore
 
 from adfpy.activity import AdfActivity
 from adfpy.trigger import AdfScheduleTrigger
