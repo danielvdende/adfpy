@@ -17,10 +17,6 @@ class AdfActivity:
             dependency_conditions = ["Succeeded"]
         self.depends_on[activity_name] = dependency_conditions
 
-    def add_dependencies(self, dependencies: Dict[str, List[str]]):
-        for activity_name, conditions in dependencies.items():
-            self.add_dependency(activity_name, conditions)
-
     def __rshift__(self, other: Union["AdfActivity", List["AdfActivity"]]):
         """Implements Activity >> Activity"""
         if isinstance(other, List):
@@ -40,7 +36,7 @@ class AdfActivity:
         return other
 
     def __rrshift__(self, other: "AdfActivity"):
-        """Called for Activity >> [Activity] because list don't have __rshift__ operators."""
+        """Called for Activity << [Activity] because list don't have __rshift__ operators."""
         self.__lshift__(other)
         return self
 
