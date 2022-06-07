@@ -2,7 +2,7 @@ from dataclasses import dataclass
 from datetime import datetime
 from typing import List, Union
 
-from azure.mgmt.datafactory.models import (
+from azure.mgmt.datafactory.models import (  # type: ignore
     ScheduleTrigger,
     ScheduleTriggerRecurrence,
     PipelineReference,
@@ -88,7 +88,7 @@ class AdfScheduleTrigger:
         )
         return tr_properties
 
-    def convert_preset_expression_to_adf(self, schedule):
+    def convert_preset_expression_to_adf(self, schedule: str) -> ScheduleTriggerRecurrence:
         if schedule not in self.preset_expressions_mapping:
             raise ValueError(f"Expression {schedule} is not in the predefined expressions mapping")
         mapped_frequency = self.preset_expressions_mapping[schedule]
@@ -103,7 +103,7 @@ class AdfScheduleTrigger:
                                              start_time=self.start_time,
                                              time_zone=self.time_zone)
 
-    def _convert_cron_to_adf(self):
+    def _convert_cron_to_adf(self) -> ScheduleTriggerRecurrence:
         """
         Basic recurrence options: minutes/hours
         Advanced recurrence options: days/weeks
@@ -113,11 +113,6 @@ class AdfScheduleTrigger:
 
             Convert a cron-like string to a set of objects understood by adf
 
-        @hourly
-        @daily
-        @weekly
-        @monthly
-        @yearly
 
         Returns:
 
@@ -125,11 +120,11 @@ class AdfScheduleTrigger:
         if self.schedule in self.preset_expressions_mapping:
             return self.convert_preset_expression_to_adf(self.schedule)
         else:
-            cron_components = self.schedule.split(" ")
-            if len(cron_components) != 5:
+            raw_cron_components = self.schedule.split(" ")
+            if len(raw_cron_components) != 5:
                 raise InvalidCronExpressionError(f"The provided cron expression: {self.schedule} has the wrong number "
                                                  f"of components. There should be 5")
-            cron_components = AdfCronExpression(*cron_components)
+            cron_components = AdfCronExpression(*raw_cron_components)
 
             if cron_components.day_of_week == "*":
                 if cron_components.day_of_month == "*":

@@ -7,8 +7,9 @@ from pathlib import Path
 from typing import Set, List
 
 from azure.identity import ClientSecretCredential
-from azure.mgmt.datafactory import DataFactoryManagementClient
+from azure.mgmt.datafactory import DataFactoryManagementClient  # type: ignore
 
+from adfpy.error import PipelineModuleParseException
 from adfpy.pipeline import AdfPipeline
 
 
@@ -60,9 +61,12 @@ def load_pipelines_from_file(file_path: Path) -> Set[AdfPipeline]:
         "main",
         file_path,
     )
-    module = importlib.util.module_from_spec(mod_spec)
-    mod_spec.loader.exec_module(module)
-    return set(var for var in vars(module).values() if isinstance(var, AdfPipeline))
+    if mod_spec:
+        module = importlib.util.module_from_spec(mod_spec)
+        mod_spec.loader.exec_module(module)  # type: ignore
+        return set(var for var in vars(module).values() if isinstance(var, AdfPipeline))
+    else:
+        raise PipelineModuleParseException(f"Could not parse module spec from path {file_path}")
 
 
 def load_pipelines_from_path(path: Path, pipelines: Set[AdfPipeline] = None) -> Set[AdfPipeline]:

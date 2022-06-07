@@ -3,8 +3,10 @@ from typing import List, Union, Dict
 
 
 class AdfActivity:
-    # TODO: figure out if there's a better way here. We make the type hint a string to avoid a circular import
-    def __init__(self, name, pipeline: "AdfPipeline" = None):  # noqa: F821
+    depends_on: Dict
+
+    # String as type hint to avoid a circular import
+    def __init__(self, name: str, pipeline: "AdfPipeline" = None):  # type: ignore # noqa: F821
         self.name = name
         self.depends_on = dict()
         if pipeline:
@@ -37,12 +39,12 @@ class AdfActivity:
             self.add_dependency(other.name)
         return other
 
-    def __rrshift__(self, other):
+    def __rrshift__(self, other: "AdfActivity"):
         """Called for Activity >> [Activity] because list don't have __rshift__ operators."""
         self.__lshift__(other)
         return self
 
-    def __rlshift__(self, other):
+    def __rlshift__(self, other: "AdfActivity"):
         """Called for Activity >> [Activity] because list don't have __lshift__ operators."""
         self.__rshift__(other)
         return self
