@@ -1,0 +1,30 @@
+site_name: AdfPy
+theme:
+  name: material
+  palette:
+    - media: "(prefers-color-scheme: light)"
+      scheme: default
+      toggle:
+        icon: material/toggle-switch
+        name: Switch to dark mode
+    - media: "(prefers-color-scheme: dark)"
+      scheme: slate
+      toggle:
+        icon: material/toggle-switch-off-outline
+        name: Switch to light mode
+  icon:
+    repo: fontawesome/brands/github-alt
+repo_name: danielvdende/adfpy
+repo_url: https://github.com/danielvdende/adfpy
+extra:
+  social:
+    - icon: fontawesome/brands/github-alt
+      link: https://github.com/danielvdende/adfpy
+nav:
+  - Home: index.md
+  - Getting Started: getting_started.md
+  - User Guide:
+      - Pipelines: user_guide/pipelines.md
+      - Triggers: user_guide/triggers.md
+      - Deploying to ADF: user_guide/deploying.md
+  - Known Issues: known_issues.md

@@ -24,6 +24,9 @@ mypy = "^0.961"
 [tool.poetry.scripts]
 adfpy-deploy = "adfpy.deploy:run_deployment"
 
+[tool.poetry.extras]
+docs = ["mkdocs", "mkdocs-material"]
+
 [build-system]
 requires = ["poetry-core>=1.0.0"]
 build-backend = "poetry.core.masonry.api"
