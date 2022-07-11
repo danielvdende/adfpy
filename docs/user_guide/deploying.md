@@ -20,8 +20,8 @@ In order to use `adfpy-deploy`, the following environment variables need to be s
 | `AZURE_TENANT_ID`                   | The tenant id in which your ADF instance is deployed                                                               |         |
 
 ## Disable resource removal
-By default, `adfpy-deploy` will try to synchronize whatever ADF resources you have in your defined path with whatever is present in the configured ADF instance. To disable this behaviour, please add the `--no-delete` parameter, e.g.
+By default, `adfpy-deploy` will try to synchronize whatever ADF resources you have in your defined path with whatever is present in the configured ADF instance. To disable this behaviour, add the `--no-delete-stale-resources` parameter, e.g.
 ```shell
-adfpy-deploy --path foo --no-delete
+adfpy-deploy --path foo --no-delete-stale-resources
 ```
-Setting `--no-delete` will prevent adfPy from removing any existing resources that are not on the configured path, but it will still add or update the resources you have in your path.
+Setting `--no-delete-stale-resources` will prevent adfPy from removing any existing resources that are not on the configured path, but it will still add or update the resources you have in your path.
