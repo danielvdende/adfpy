@@ -1,4 +1,4 @@
-# Welcome to 🏭🍰 AdfPy
+# Welcome to 🏭🍰 adfPy
 
 AdfPy is an opinionated, Pythonic wrapper around the Azure Data Factory (ADF) SDK. It aims to provide Airflow-like syntax for defining data pipelines in ADF, making it easier and more reliable to build data pipelines in a robust manner. 
 

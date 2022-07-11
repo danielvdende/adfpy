@@ -172,18 +172,34 @@ def configure_data_factory() -> ConfiguredDataFactory:
 
 
 def run_deployment():
-    parser = argparse.ArgumentParser(description='Parse input parameters')
-    parser.add_argument('--pipelines_path', type=Path, dest="pipelines_path", help='Path containing AdfPy pipelines',
+    parser = argparse.ArgumentParser(description="""
+       This tool deploys your adfPy resources. For authentication, you should set a number of
+       environment variables:
+         AZURE_SUBSCRIPTION_ID
+         AZURE_RESOURCE_GROUP_NAME
+         AZURE_DATA_FACTORY_NAME
+         AZURE_SERVICE_PRINCIPAL_CLIENT_ID
+         AZURE_SERVICE_PRINCIPAL_SECRET
+         AZURE_TENANT_ID
+    """)
+    parser.add_argument('--path', type=Path, dest="path", help='Path containing AdfPy resources',
                         required=True)
+    parser.add_argument('--no-delete', dest="no_delete", help='Flag indicating whether or not to remove '
+                                                              'resources from ADF that are not available '
+                                                              'in the configured path. Defaults to False',
+                        required=False,
+                        action='store_true')
     args = parser.parse_args()
 
     configured_adf = configure_data_factory()
 
-    pipelines = load_pipelines_from_path(args.pipelines_path)
+    pipelines = load_pipelines_from_path(args.path)
 
     ensure_all_pipelines_up_to_date(pipelines, configured_adf)
 
-    remove_stale_pipelines(configured_adf)
+    if not args.no_delete:
+        # if this parameter is set, we don't want to remove stale pipelines
+        remove_stale_pipelines(configured_adf)
 
 
 if __name__ == "__main__":

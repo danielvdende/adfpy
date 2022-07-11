@@ -1,4 +1,4 @@
-from adfpy.activity import AdfActivity  
+from adfpy.activity import AdfActivity
 
 
 class TestAdfActivity:
