@@ -7,3 +7,6 @@ The documentation here is intended to make easy and clear how to use AdfPy. Plea
 ## Key features and principles
 - adfPy does *not* aim to be 100% feature-complete (at least, not for now). Instead, it exposes the most-used components of ADF. If you do miss something, don't hesitate to contribute! We're more than happy to receive any help.
 - Where possible, we have stuck with a naming convention of prefixing the ADF SDK function/class name with `Adf`. This makes it clear what part of the SDK we are wrapping, but also ensure it's clear what components are part of adfPy.
+
+## Contributing
+We're more than happy to receive any contributions: big, small, or anywhere in between! Please open an issue and a PR on github and we'll get back to you as soon as we can!
