@@ -1,3 +1,5 @@
+from typing import Any, List, Optional
+
 from azure.mgmt.datafactory.models import (  # type: ignore
     ActivityDependency,
     AzureBlobStorageReadSettings,
@@ -73,14 +75,19 @@ class AdfDeleteActivity(AdfActivity):
 
 
 class AdfDatabricksSparkPythonActivity(AdfActivity):
-    def __init__(self, name: str, python_file: str, pipeline: AdfPipeline = None):
+    def __init__(self, name: str,
+                 python_file: str,
+                 parameters: Optional[List[Any]] = None,
+                 pipeline: AdfPipeline = None):
         super(AdfDatabricksSparkPythonActivity, self).__init__(name, pipeline)
         self.python_file = python_file
+        self.parameters = parameters
 
     def to_adf(self) -> DatabricksSparkPythonActivity:
         return DatabricksSparkPythonActivity(
             name=self.name,
             python_file=self.python_file,
+            parameters=self.parameters,
             depends_on=[
                 ActivityDependency(activity=dep_name, dependency_conditions=dep_conditions)
                 for dep_name, dep_conditions in self.depends_on.items()

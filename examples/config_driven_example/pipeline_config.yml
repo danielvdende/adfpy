@@ -1,0 +1,38 @@
+meta:
+  name: my_data
+  trigger:
+    schedule: "@daily"
+dataFlowSettings:
+  source:
+    dataset: source
+  landing:
+    dataset: landing
+    path: "dbfs:/landing"
+  ingested:
+    dataset: ingested
+    path: "dbfs:/datalake"
+dataDefinitions:
+  tables:
+    - table: my_table
+      schema: my_schema
+      database: my_database
+      target:
+        uniqueIdColumns:
+          - id
+        database: target_database
+        table: target_table
+      columns:
+        - source:
+            name: id
+            type: VARCHAR2(3)
+          target:
+            name: id
+            type: string
+            nullable: false
+        - source:
+            name: value
+            type: VARCHAR2(4)
+          target:
+            name: value
+            type: string
+            nullable: true

@@ -17,6 +17,10 @@ class AdfActivity:
             dependency_conditions = ["Succeeded"]
         self.depends_on[activity_name] = dependency_conditions
 
+    def add_dependencies(self, activities: Dict[str, List[str]]):
+        for activity_name, dependency_conditions in activities.items():
+            self.add_dependency(activity_name, dependency_conditions)
+
     def __rshift__(self, other: Union["AdfActivity", List["AdfActivity"]]):
         """Implements Activity >> Activity"""
         if isinstance(other, List):
