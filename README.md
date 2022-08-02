@@ -12,7 +12,7 @@ Generally, using adfPy has 2 main components:
 1. Write your pipeline.
 2. Deploy your pipeline.
 
-adfPy has an opinionated syntax, which is heavily influenced by Airflow. For documentation on what the syntax looks like, please read the docs [here]().
+adfPy has an opinionated syntax, which is heavily influenced by Airflow. For documentation on what the syntax looks like, please read the docs [here](https://danielvdende.github.io/adfpy/).
 Some examples are provided in the examples directory of this repository.
 
 
