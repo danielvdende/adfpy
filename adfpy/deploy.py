@@ -96,7 +96,8 @@ def load_pipelines_from_path(path: Path, pipelines: Set[AdfPipeline] = None) -> 
 
 
 def create_or_update_pipeline(adf: ConfiguredDataFactory,
-                              pipeline: AdfPipeline):
+                              pipeline: AdfPipeline,
+                              dry_run: bool = False):
     """Create or update a pipeline in Azure Data Factory based on the provided pipeline definition
 
     This function will also ensure that any pipelines that the provided pipeline depends on are created first. To
@@ -106,14 +107,16 @@ def create_or_update_pipeline(adf: ConfiguredDataFactory,
     Args:
         adf: ConfiguredDataFactory object
         pipeline: AdfPipeline object based on provided configuration
+        dry_run: boolean indicating whether the actions are to be executed as a dry-run. Defaults to False.
     """
     for required_pipeline in pipeline.depends_on_pipelines:
         # We only process a required pipeline if it hasn't been processed before
         if required_pipeline.name not in processed_pipelines_names:
-            create_or_update_pipeline(adf, required_pipeline)
+            create_or_update_pipeline(adf, required_pipeline, dry_run)
     print(f"Creating/updating {pipeline.name}")
-    adf.client.pipelines.create_or_update(adf.resource_group, adf.name, pipeline.name, pipeline.to_adf())
-    if pipeline.schedule:
+    if not dry_run:
+        adf.client.pipelines.create_or_update(adf.resource_group, adf.name, pipeline.name, pipeline.to_adf())
+    if pipeline.schedule and not dry_run:
         adf.client.triggers.create_or_update(adf.resource_group,
                                              adf.name,
                                              pipeline.schedule.name,
@@ -122,7 +125,8 @@ def create_or_update_pipeline(adf: ConfiguredDataFactory,
 
 
 def ensure_all_pipelines_up_to_date(pipelines: Set[AdfPipeline],
-                                    adf: ConfiguredDataFactory):
+                                    adf: ConfiguredDataFactory,
+                                    dry_run: bool = False):
     """Create or update pipelines in ADF based on a provided set of pipelines.
 
     This function checks with the global `processed_pipelines_names` variable to avoid duplicate processing.
@@ -132,25 +136,30 @@ def ensure_all_pipelines_up_to_date(pipelines: Set[AdfPipeline],
     Args:
         pipelines: Set of AdfPipeline objects retrieved from the local path
         adf: ConfiguredDataFactory object
+        dry_run: boolean indicating whether the actions are to be executed as a dry-run. Defaults to False.
     """
     for p in pipelines:
         if p.name not in processed_pipelines_names:
-            create_or_update_pipeline(adf, p)
+            create_or_update_pipeline(adf, p, dry_run)
 
 
-def remove_stale_pipelines(adf: ConfiguredDataFactory):
+def remove_stale_pipelines(adf: ConfiguredDataFactory, dry_run: bool = False):
     """Removes any pipelines that are (no longer) available in the configured (local) pipeline path
 
     This function is destructive, as any pipeline not managed by adfPy will be removed.
 
     Args:
         adf: ConfiguredDataFactory object
+        dry_run: boolean indicating whether the actions are to be executed as a dry-run. Defaults to False.
     """
     existing_pipelines = fetch_existing_pipelines(adf)
     for p in existing_pipelines:
         if p not in processed_pipelines_names:
             print(f"Pipeline {p} no longer exists. Deleting from ADF")
-            adf.client.pipelines.delete(resource_group_name=adf.resource_group, factory_name=adf.name, pipeline_name=p)
+            if not dry_run:
+                adf.client.pipelines.delete(resource_group_name=adf.resource_group,
+                                            factory_name=adf.name,
+                                            pipeline_name=p)
 
 
 def configure_data_factory() -> ConfiguredDataFactory:
@@ -177,7 +186,11 @@ def configure_data_factory() -> ConfiguredDataFactory:
 @click.option('--delete-stale-resources/--no-delete-stale-resources', type=bool, default=True,
               help="Flag indicating whether or not to remove resources from ADF that are not available in the "
                    "configured path. Defaults to False")
-def run_deployment(path, delete_stale_resources):
+@click.option("--dry-run", type=bool, is_flag=True, default=False, help="Execute the deployment as a dry-run or not. If"
+                                                                        "enabled, the deploy script will only output "
+                                                                        "what will be changed rather than actually "
+                                                                        "executing the required action")
+def run_deployment(path, delete_stale_resources, dry_run):
     """Deploy your adfPy resources to ADF
 
     This tool deploys your adfPy resources. For authentication, you should set a number of
@@ -195,10 +208,10 @@ def run_deployment(path, delete_stale_resources):
 
     pipelines = load_pipelines_from_path(path)
 
-    ensure_all_pipelines_up_to_date(pipelines, configured_adf)
+    ensure_all_pipelines_up_to_date(pipelines, configured_adf, dry_run)
 
     if delete_stale_resources:
-        remove_stale_pipelines(configured_adf)
+        remove_stale_pipelines(configured_adf, dry_run)
 
 
 if __name__ == "__main__":
