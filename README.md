@@ -19,7 +19,7 @@ Some examples are provided in the examples directory of this repository.
 Once you've written your pipelines, it's time to deploy them! For this, you can use adfPy's deployment script:
 ```shell
 pip install adfpy
-adfpy-deploy
+adfpy-deploy --path <your_path_here>
 ```
 Note:
 - This script will ensure all pipelines in the provided path are present in your target ADF.
