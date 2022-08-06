@@ -1,5 +1,7 @@
 import importlib.util
+import logging
 import os
+import sys
 
 import click
 
@@ -12,6 +14,16 @@ from azure.mgmt.datafactory import DataFactoryManagementClient  # type: ignore
 
 from adfpy.error import PipelineModuleParseException
 from adfpy.pipeline import AdfPipeline
+
+stdout_handler = logging.StreamHandler(stream=sys.stdout)
+handlers = [stdout_handler]
+logging.basicConfig(
+    format='[%(asctime)s] {%(filename)s:%(lineno)d} %(levelname)s - %(message)s',
+    handlers=handlers
+)
+
+logger = logging.getLogger("adfPy")
+logger.setLevel(os.getenv("LOG_LEVEL", logging.INFO))
 
 
 @dataclass
@@ -113,14 +125,16 @@ def create_or_update_pipeline(adf: ConfiguredDataFactory,
         # We only process a required pipeline if it hasn't been processed before
         if required_pipeline.name not in processed_pipelines_names:
             create_or_update_pipeline(adf, required_pipeline, dry_run)
-    print(f"Creating/updating {pipeline.name}")
+    logger.info(f"Creating/updating pipeline {pipeline.name}")
     if not dry_run:
         adf.client.pipelines.create_or_update(adf.resource_group, adf.name, pipeline.name, pipeline.to_adf())
-    if pipeline.schedule and not dry_run:
-        adf.client.triggers.create_or_update(adf.resource_group,
-                                             adf.name,
-                                             pipeline.schedule.name,
-                                             pipeline.schedule.to_adf())
+    if pipeline.schedule:
+        logger.info(f"Creating/updating trigger for {pipeline.name}")
+        if not dry_run:
+            adf.client.triggers.create_or_update(adf.resource_group,
+                                                 adf.name,
+                                                 pipeline.schedule.name,
+                                                 pipeline.schedule.to_adf())
     processed_pipelines_names.append(pipeline.name)
 
 
@@ -155,7 +169,7 @@ def remove_stale_pipelines(adf: ConfiguredDataFactory, dry_run: bool = False):
     existing_pipelines = fetch_existing_pipelines(adf)
     for p in existing_pipelines:
         if p not in processed_pipelines_names:
-            print(f"Pipeline {p} no longer exists. Deleting from ADF")
+            logger.info(f"Deleting pipeline {p} from ADF. Pipeline {p} no longer exists in path")
             if not dry_run:
                 adf.client.pipelines.delete(resource_group_name=adf.resource_group,
                                             factory_name=adf.name,
@@ -205,8 +219,13 @@ def run_deployment(path, delete_stale_resources, dry_run):
     AZURE_TENANT_ID
     """
     configured_adf = configure_data_factory()
+    logger.info("Welcome to adfPy!")
+    logger.info(f"Starting up deployment to factory: {configured_adf.name}")
+    if dry_run:
+        logger.info("Dry run enabled. All changes below will not be executed")
 
     pipelines = load_pipelines_from_path(path)
+    logger.info(f"Loaded {len(pipelines)} pipelines")
 
     ensure_all_pipelines_up_to_date(pipelines, configured_adf, dry_run)
 
