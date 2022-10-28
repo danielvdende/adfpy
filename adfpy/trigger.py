@@ -66,7 +66,7 @@ class AdfScheduleTrigger:
         self.start_time = start_time
         self.time_zone = time_zone
         self.pipelines = [
-            TriggerPipelineReference(pipeline_reference=PipelineReference(reference_name=p)) for p in pipelines
+            TriggerPipelineReference(pipeline_reference=PipelineReference(reference_name=p, type="")) for p in pipelines
         ]
 
         self.preset_expressions_mapping = {

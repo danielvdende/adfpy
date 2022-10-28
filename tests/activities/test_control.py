@@ -14,7 +14,7 @@ class TestForEachActivity:
         adf_activity = activity.to_adf()
         expected_result = ForEachActivity(
             name="foobar",
-            items=Expression(value="@variables('foo')"),
+            items=Expression(value="@variables('foo')", type=""),
             activities=[SetVariableActivity(name="foo", value="bar", depends_on=[])],
             depends_on=[],
         )
@@ -33,7 +33,7 @@ class TestForEachActivity:
         adf_activity = activity.to_adf()
         expected_result = ForEachActivity(
             name="foobar",
-            items=Expression(value="@variables('foo')"),
+            items=Expression(value="@variables('foo')", type=""),
             activities=[
                 SetVariableActivity(name="foo", value="bar", depends_on=[]),
                 SetVariableActivity(

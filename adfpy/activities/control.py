@@ -77,7 +77,7 @@ class AdfForEachActivity(AdfActivity):
     def to_adf(self) -> ForEachActivity:
         return ForEachActivity(
             name=self.name,
-            items=Expression(value=self.items),
+            items=Expression(value=self.items, type=""),
             activities=[activity.to_adf() for activity in self.activities],
             depends_on=[
                 ActivityDependency(activity=dep_name, dependency_conditions=dep_conditions)
