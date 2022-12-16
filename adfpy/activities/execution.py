@@ -1,4 +1,4 @@
-from typing import Any, List, Optional
+from typing import Any, List, Optional, Union
 
 from azure.mgmt.datafactory.models import (  # type: ignore
     ActivityDependency,
@@ -15,6 +15,7 @@ from azure.mgmt.datafactory.models import (  # type: ignore
 )
 
 from adfpy.activity import AdfActivity
+from adfpy.datasets.file_based import AdfFileBasedDataset
 from adfpy.pipeline import AdfPipeline
 
 
@@ -22,15 +23,21 @@ class AdfCopyActivity(AdfActivity):
     def __init__(
             self,
             name: str,
-            input_dataset_name: str,
-            output_dataset_name: str,
+            input_dataset: Union[str, AdfFileBasedDataset],
+            output_dataset: Union[str, AdfFileBasedDataset],
             source_type: CopySource,
             sink_type: CopySink,
             pipeline: AdfPipeline = None
     ):
         super(AdfCopyActivity, self).__init__(name, pipeline)
-        self.input_dataset = DatasetReference(reference_name=input_dataset_name)
-        self.output_dataset = DatasetReference(reference_name=output_dataset_name)
+        if type(input_dataset) == AdfFileBasedDataset:
+            self.input_dataset = DatasetReference(reference_name=input_dataset.name)
+        else:
+            self.input_dataset = DatasetReference(reference_name=input_dataset)
+        if type(output_dataset) == AdfFileBasedDataset:
+            self.output_dataset = DatasetReference(reference_name=output_dataset.name)
+        else:
+            self.output_dataset = DatasetReference(reference_name=output_dataset)
         self.source_type = source_type
         self.sink_type = sink_type
 

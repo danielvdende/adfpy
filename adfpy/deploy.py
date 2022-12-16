@@ -14,6 +14,7 @@ from azure.mgmt.datafactory import DataFactoryManagementClient  # type: ignore
 
 from adfpy.error import PipelineModuleParseException
 from adfpy.pipeline import AdfPipeline
+from adfpy.datasets.main import AdfDataset
 
 stdout_handler = logging.StreamHandler(stream=sys.stdout)
 handlers = [stdout_handler]
@@ -54,7 +55,7 @@ def fetch_existing_pipelines(adf: ConfiguredDataFactory) -> List[str]:
     ]
 
 
-def load_pipelines_from_file(file_path: Path) -> Set[AdfPipeline]:
+def load_resources_from_file(file_path: Path, type) -> Set:
     """Load all AdfPipeline objects from a file
 
     This function only works with single files. Raises IsADirectoryError if the provided path is a directory
@@ -77,12 +78,26 @@ def load_pipelines_from_file(file_path: Path) -> Set[AdfPipeline]:
     if mod_spec:
         module = importlib.util.module_from_spec(mod_spec)
         mod_spec.loader.exec_module(module)  # type: ignore
-        return set(var for var in vars(module).values() if isinstance(var, AdfPipeline))
+        return set(var for var in vars(module).values() if isinstance(var, type))
     else:
         raise PipelineModuleParseException(f"Could not parse module spec from path {file_path}")
 
 
-def load_pipelines_from_path(path: Path, pipelines: Set[AdfPipeline] = None) -> Set[AdfPipeline]:
+@dataclass
+class AdfResources:
+    datasets: Set[AdfDataset]
+    pipelines: Set[AdfPipeline]
+
+
+def load_all_resources_from_path(path: Path) -> AdfResources:
+    # take the naive approach for now, just parse all files twice.
+    resources = AdfResources
+    resources.pipelines = load_resources_from_path(path, AdfPipeline)
+    resources.datasets = load_resources_from_path(path, AdfDataset)
+    return resources
+
+
+def load_resources_from_path(path: Path, type, pipelines: Set[AdfPipeline] = None) -> Set[AdfPipeline]:
     """Load all AdfPipeline objects from a given path.
 
     The path can be either a directory or a file. If it's a directory, the function will recursively step through
@@ -101,9 +116,9 @@ def load_pipelines_from_path(path: Path, pipelines: Set[AdfPipeline] = None) -> 
     child_elements = path.glob("**/*.py")
     for el in child_elements:
         if el.is_dir():
-            load_pipelines_from_path(el, pipelines)
+            load_resources_from_path(el, type, pipelines)
         else:
-            pipelines = pipelines.union(load_pipelines_from_file(el))
+            pipelines = pipelines.union(load_resources_from_file(el, type))
     return pipelines
 
 
@@ -224,10 +239,20 @@ def run_deployment(path, delete_stale_resources, dry_run):
     if dry_run:
         logger.info("Dry run enabled. All changes below will not be executed")
 
-    pipelines = load_pipelines_from_path(path)
-    logger.info(f"Loaded {len(pipelines)} pipelines")
+    adf_resources = load_all_resources_from_path(path)
 
-    ensure_all_pipelines_up_to_date(pipelines, configured_adf, dry_run)
+    logger.info(f"Loaded {len(adf_resources.datasets)} datasets")
+    logger.info(f"Loaded {len(adf_resources.pipelines)} pipelines")
+
+    ensure_all_pipelines_up_to_date(adf_resources.pipelines, configured_adf, dry_run)
+
+    for dataset in adf_resources.datasets:
+        configured_adf.client.datasets.create_or_update(
+            configured_adf.resource_group,
+            configured_adf.name,
+            dataset.name,
+            dataset.to_adf()
+        )
 
     if delete_stale_resources:
         remove_stale_pipelines(configured_adf, dry_run)

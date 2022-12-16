@@ -1,5 +1,6 @@
 *.ipynb
 .idea
+.fleet
 *.DS_Store
 *.pyc
 *.egg-info
@@ -8,3 +9,5 @@
 __pycache__
 .vscode
 .coverage
+dist
+env_vars.sh
