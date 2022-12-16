@@ -6,15 +6,15 @@ on:
       - '!releases/**'
 jobs:
   lint:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-22.04
     strategy:
       matrix:
-        python-version: [ 3.8, 3.9, 3.10.0 ]
+        python-version: [ 3.8, 3.9, 3.10.9 ] # We need the `.9` part for 3.10, otherwise github turns it into 3.1
     steps:
       - name: Check out repository code
         uses: actions/checkout@v2
       - name: Set up Python ${{ matrix.python-version }}
-        uses: actions/setup-python@v2
+        uses: actions/setup-python@v4
         with:
           python-version: ${{ matrix.python-version }}
       - name: Install dependencies
@@ -25,15 +25,15 @@ jobs:
       - name: Lint with flake8
         run: poetry run flake8
   test:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-22.04
     strategy:
       matrix:
-        python-version: [ 3.8, 3.9, 3.10.0 ]
+        python-version: [ 3.8, 3.9, 3.10.9 ] # We need the `.9` part for 3.10, otherwise github turns it into 3.1
     steps:
       - name: Check out repository code
         uses: actions/checkout@v2
       - name: Set up Python ${{ matrix.python-version }}
-        uses: actions/setup-python@v2
+        uses: actions/setup-python@v4
         with:
           python-version: ${{ matrix.python-version }}
       - name: Install dependencies
@@ -45,15 +45,15 @@ jobs:
           poetry run pytest --cov=adfpy tests
 
   type-check:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-22.04
     strategy:
       matrix:
-        python-version: [ 3.8, 3.9, 3.10.0 ]
+        python-version: [ 3.8, 3.9, 3.10.9 ] # We need the `.9` part for 3.10, otherwise github turns it into 3.1
     steps:
       - name: Check out repository code
         uses: actions/checkout@v2
       - name: Set up Python ${{ matrix.python-version }}
-        uses: actions/setup-python@v2
+        uses: actions/setup-python@v4
         with:
           python-version: ${{ matrix.python-version }}
       - name: Install dependencies
