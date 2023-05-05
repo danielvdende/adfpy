@@ -11,7 +11,7 @@ keywords = ["azure", "data", "factory"]
 
 [tool.poetry.dependencies]
 python = "^3.8"
-azure-mgmt-datafactory = "^2.2.1, <2.7.0"
+azure-mgmt-datafactory = "^3.0.0"
 azure-identity = "^1.7.1"
 click = "^8.1.3"
 

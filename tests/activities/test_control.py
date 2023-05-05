@@ -2,6 +2,8 @@ from adfpy.activities import control as victim
 
 from azure.mgmt.datafactory.models import ForEachActivity, SetVariableActivity, Expression, ActivityDependency
 
+from adfpy.custom_types import AdfExpression
+
 
 class TestForEachActivity:
     def test_single_activity(self):
@@ -33,7 +35,7 @@ class TestForEachActivity:
         adf_activity = activity.to_adf()
         expected_result = ForEachActivity(
             name="foobar",
-            items=Expression(value="@variables('foo')"),
+            items=AdfExpression(value="@variables('foo')"),
             activities=[
                 SetVariableActivity(name="foo", value="bar", depends_on=[]),
                 SetVariableActivity(
